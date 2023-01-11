@@ -1,0 +1,52 @@
+version: '3'
+
+services:
+  zookeper-1:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeper.c-1.otp-email.local
+    environment:
+      - ZOOKEEPER_CLIENT_PORT=2181
+      - ZOOKEEPER_TICK_TIME=2000
+    ports:
+      - 22181:2181
+  
+  zookeper-2:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeper.c-2.otp-email.local
+    environment:
+      - ZOOKEEPER_CLIENT_PORT=2181
+      - ZOOKEEPER_TICK_TIME=2000
+    ports:
+      - 32181:2181
+
+  kafka-1:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka.c-1.otp-email.local
+    depends_on:
+      - zookeper-1
+      - zookeper-2
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeper.c-1.otp-email.local:2181,zookeper.c-2.otp-email.local:32181
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka.c-1.otp-email.local:9092,PLAINTEXT_HOST://localhost:29092
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+    ports:
+      - 29092:29092
+  
+  kafka-2:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka.c-2.otp-email.local
+    depends_on:
+      - zookeper-1
+      - zookeper-2
+    ports:
+      - 39092:39092
+    environment:
+      - KAFKA_BROKER_ID=2
+      - KAFKA_ZOOKEEPER_CONNECT=zookeper.c-1.otp-email.local:2181,zookeper.c-2.otp-email.local:32181
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka.c-2.otp-email.local:9092,PLAINTEXT_HOST://localhost:39092
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
